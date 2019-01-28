@@ -34,7 +34,7 @@ class DeleteEndBlankLinesCommand(sublime_plugin.EventListener):
                 )
 
                 if re.match(RE, pre_content):
-                    view.run_command("left_delete")
+                    view.run_command("right_delete")
                 else:
                     break
         move_cursor(view, size, size)

@@ -22,6 +22,8 @@ class DeleteEndBlankLinesCommand(sublime_plugin.EventListener):
             cursor_region = move_cursor(view, size, size)[0]
             content = view.full_line(cursor_region)
 
+            if size == 0:
+                break
             if re.match(RE, view.substr(content)):
                 _tuple = tuple(cursor_region)
                 previous_cursor_region = move_cursor(

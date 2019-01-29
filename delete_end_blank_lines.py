@@ -17,6 +17,7 @@ def move_cursor(view, start=0, end=0):
 
 class DeleteEndBlankLinesCommand(sublime_plugin.EventListener):
     def on_pre_save(self, view):
+        old_sel = tuple(view.sel()[0])
         while True:
             size = view.size()
             cursor_region = move_cursor(view, size, size)[0]
@@ -37,4 +38,5 @@ class DeleteEndBlankLinesCommand(sublime_plugin.EventListener):
                     view.run_command("right_delete")
                 else:
                     break
-        move_cursor(view, size, size)
+        t_sel = move_cursor(view, old_sel[0], old_sel[1])
+        view.show(t_sel)

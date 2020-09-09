@@ -10,5 +10,3 @@
 cd /opt/sublime_text/Data/Packages/
 git clone https://github.com/YaKazama/DeleteEndBlankLines.git
 ```
-# 注意
-在 3207版本中，在未设置`"trim_trailing_white_space_on_save": true`之前，有可能出现卡死的情况。

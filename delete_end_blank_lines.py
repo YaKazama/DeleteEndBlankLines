@@ -1,41 +1,71 @@
 # -*- coding: utf-8 -*-
 # @author: Ya Kazama <kazamaya.y@gmail.com>
 """"""
-import re
 import sublime
 import sublime_plugin
 
-RE = r"^$"
+
+platform = sublime.platform()
 
 
-def move_cursor(view, start=0, end=0):
+if platform == "windows":
+    new_line_char = "\r\n"
+elif platform == "osx":
+    new_line_char = "\r"
+else:
+    new_line_char = "\n"
+
+
+def _cursor(view, start=0, end=0, region=True):
     sel = view.sel()
     sel.clear()
     sel.add(sublime.Region(start, end))
+    if region:
+        return sel[0]
     return sel
 
 
 class DeleteEndBlankLinesCommand(sublime_plugin.EventListener):
     def on_pre_save(self, view):
-        old_sel = view.sel()[0]
+        sel_current = view.sel()[0]
+
         while True:
             size = view.size()
-            cursor_region = move_cursor(view, size, size)[0]
-            content = view.full_line(cursor_region)
+            region_line_end = _cursor(view, size, size)
+            fl_region_line_end = view.full_line(region_line_end)
 
-            if size == 0:
+            if size < 1:
                 break
-            if re.match(RE, view.substr(content)):
-                previous_cursor_region = move_cursor(
-                    view, cursor_region.a - 1, cursor_region.b - 1
-                )[0]
-                pre_content = view.substr(
-                    view.full_line(previous_cursor_region)
-                )
 
-                if re.match(RE, pre_content):
-                    view.run_command("right_delete")
+            if fl_region_line_end.empty():
+                region_line_previous = _cursor(
+                    view,
+                    fl_region_line_end.a - 1,
+                    fl_region_line_end.b - 1
+                )
+                fl_region_line_previous = view.full_line(region_line_previous)
+                offset = fl_region_line_previous.b - fl_region_line_previous.a
+                # if view.substr(fl_region_line_previous) == new_line_char:
+                if offset <= 1 or fl_region_line_previous.empty():
+                    _cursor(view, size, size)
+                    view.run_command("move_to", {"to": "bol", "extend": True})
+                    view.run_command("add_to_kill_ring", {"forward": False})
+                    view.run_command("left_delete")
                 else:
                     break
-        t_sel = move_cursor(view, old_sel.a, old_sel.b)
-        view.show(t_sel)
+            else:
+                _cursor(view, size, size)
+                view.run_command("insert", {"characters": new_line_char})
+                _size = view.size()
+                if _size - size > 1:
+                    view.run_command("move_to", {"to": "bol", "extend": True})
+                    view.run_command("add_to_kill_ring", {"forward": False})
+                    view.run_command("left_delete")
+                break
+
+        size = view.size()
+        offset = sel_current.b - size
+        if offset >= -1:
+            view.show(_cursor(view, size, size))
+        else:
+            view.show(_cursor(view, sel_current.a, sel_current.b))
